@@ -3,11 +3,12 @@ package forme.controllers.auth;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Map;
 
-import javax.sql.DataSource;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -15,6 +16,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import forme.config.DBConnection;
+import forme.models.User;
 
 @Path("auth")
 public class AuthController {
@@ -34,9 +36,42 @@ public class AuthController {
 	
 	@POST
 	@Path("/register")
-	public void registerUser() {
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	public String registerUser(@FormParam("name") String name, 
+			@FormParam("email") String email, 
+			@FormParam("password") String password) {
 		
+		System.out.println(name);
+		System.out.println(email);
+		
+		Connection connection;
+		try {
+			connection = DriverManager.getConnection(DBConnection.getDB_URL(), DBConnection.getUser(), DBConnection.getPW());
+			Statement stmt = connection.createStatement();
+			stmt.execute("CREATE TABLE IF NOT EXISTS users ( " 
+					   + "id varchar(20)," 
+					   + "username varchar(20),"
+					   + "email varchar(40),"
+					   + "password varchar(100),"
+					   + "PRIMARY KEY (id) );");
+			
+			
+			User user = new User("testtesttest", name, email, password.toCharArray());
+			
+			String insert = "INSERT INTO users (id, username, email, password) VALUES ( "
+					+ String.format(" '%s', '%s', '%s', '%s' );", user.getId(), user.getName(), user.getEmail(), user.getPassword().toString());
+			System.out.println(insert);
+			
+			stmt.executeUpdate(insert);
+			
+			return "registered";
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return e.getMessage();
+		}	
 	}
+	
 	
 	@GET
 	@Path("/register")
