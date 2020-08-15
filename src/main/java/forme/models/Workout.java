@@ -32,6 +32,4 @@ public class Workout {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	
-	
 }
