@@ -2,6 +2,7 @@ package forme.controllers.exercises;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
@@ -35,20 +36,60 @@ public class ExerciseController {
 	public Workout getAllUserExercises() {
 		return null;
 	}
-	
+	/*
 	@GET
-	@Path("{id}")
+	@Path("/{id}")
 	@Produces(MediaType.TEXT_HTML)
 	public String getUserExerciseHTML(@PathParam("id") Integer id) {
 		return "<html> " + "<title>" + "Exercise: " + id + "</title>" + "<body><h1>" + "Exerciser: " + id + "</body></h1>"
 				+ "</html> ";
 	}
-
+*/
 	@GET
-	@Path("{id}")
+	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Workout getUserExercise() {
-		return null;
+	public String getUserExercise(@PathParam("id") String id) {	
+		
+		System.out.println("flag0");
+		
+		Connection connection;
+		try {
+			connection = DriverManager.getConnection(DBConnection.getDB_URL(), DBConnection.getUser(), DBConnection.getPW());	
+			Statement stmt = connection.createStatement();
+			
+			System.out.println("flag1");
+			
+			String log = "SELECT * FROM workouts w "
+					+ "WHERE w.id IN "
+					+ "("
+					+ "SELECT workout_id FROM user_logs WHERE user_id = '" + id + "'" 
+					+ ")";
+			
+			
+			//String test = "SELECT * FROM user_logs WHERE user_id = '" + id + "')";
+			
+			
+			String result = "{ logs: [ ";
+			ResultSet rs = stmt.executeQuery(log);
+			
+			while (rs.next()) {
+				
+				//result += "user: " +  rs.getString("user_id");
+				//result += " workout: " + rs.getString("workout_id");
+				
+				String exercise = "{ date: " + rs.getDate("log_date") 
+					+ ", length: " + rs.getFloat("length") 
+					+ ", description: " + rs.getString("description") 
+					+ "}, ";
+				
+				result += exercise;
+			}
+			result += " ] }";
+			
+			return result;
+		} catch (SQLException e) {
+			return e.getMessage();
+		}
 	}
 	
 	@GET
@@ -86,7 +127,7 @@ public class ExerciseController {
 									+ "FOREIGN KEY (workout_id) REFERENCES workouts)";
 			stmt.execute(userWorkouts);
 
-			Workout workout = new Workout("wo23454324"+(++counter), length, date, description);
+			Workout workout = new Workout("wo0845632"+(++counter), length, date, description);
 			
 			String query = "INSERT INTO workouts (id, length, log_date, description) VALUES ( "
 					+ String.format(" '%s', '%f', '%s', '%s')", workout.getId(), workout.getLength(), workout.getDate(), workout.getDescription());
@@ -94,6 +135,7 @@ public class ExerciseController {
 			
 			String query2 = "INSERT INTO user_logs (user_id, workout_id) VALUES ( "
 								+ String.format(" '%s','%s')" , id, workout.getId());
+			stmt.executeUpdate(query2);
 			
 			return "";
 		} catch (SQLException e) {
