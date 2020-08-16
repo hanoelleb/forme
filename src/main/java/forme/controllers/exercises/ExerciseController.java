@@ -19,7 +19,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import forme.models.Workout;
-import io.github.cdimascio.dotenv.Dotenv;
+//import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -27,7 +27,8 @@ import io.jsonwebtoken.security.Keys;
 @Path("")
 public class ExerciseController {
 	
-	Dotenv dotenv = Dotenv.load();
+	//Dotenv dotenv = Dotenv.load();
+	//Dotenv dotenv = Dotenv.configure().directory("").load();
 	
 	static int counter = 0;
 	
@@ -80,7 +81,8 @@ public class ExerciseController {
 			return("token invalid");
 		
 		try {
-			connection = DriverManager.getConnection(dotenv.get("DB_URL"), dotenv.get("USER"), dotenv.get("PW"));	
+			//connection = DriverManager.getConnection(dotenv.get("DB_URL"), dotenv.get("USER"), dotenv.get("PW"));	
+			connection =  DriverManager.getConnection(System.getenv("DB_URL"), System.getenv("USER"), System.getenv("PW"));
 			Statement stmt = connection.createStatement();
 			
 			String log = "SELECT * FROM workouts w "
@@ -135,7 +137,8 @@ public class ExerciseController {
 		Date date = new Date();
 		Connection connection;
 		try {
-			connection =  DriverManager.getConnection(dotenv.get("DB_URL"), dotenv.get("USER"), dotenv.get("PW"));	
+			//connection =  DriverManager.getConnection(dotenv.get("DB_URL"), dotenv.get("USER"), dotenv.get("PW"));
+			connection =  DriverManager.getConnection(System.getenv("DB_URL"), System.getenv("USER"), System.getenv("PW"));
 			Statement stmt = connection.createStatement();
 			
 			String workouts = "CREATE TABLE IF NOT EXISTS workouts (" 

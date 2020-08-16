@@ -22,14 +22,14 @@ import org.mindrot.jbcrypt.BCrypt;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
-import io.github.cdimascio.dotenv.Dotenv;
+//import io.github.cdimascio.dotenv.Dotenv;
 
 import forme.models.User;
 
 @Path("auth")
 public class AuthController {
 	
-	Dotenv dotenv = Dotenv.load();
+	//Dotenv dotenv = Dotenv.configure().directory("").load();
 	
 	//TODO: replace secret str with .env var
 	private static String secretStr = "kI5dhi7tS/aXsu3NWSSI5K6GSaxfkznn5TJwYWDVE4k=";
@@ -45,7 +45,8 @@ public class AuthController {
 	public String loginUser(@FormParam("name") String name, @FormParam("password") String password ) {
 		Connection connection;
 		try {
-			connection = DriverManager.getConnection(dotenv.get("DB_URL"), dotenv.get("USER"), dotenv.get("PW"));
+			//connection = DriverManager.getConnection(dotenv.get("DB_URL"), dotenv.get("USER"), dotenv.get("PW"));
+			connection =  DriverManager.getConnection(System.getenv("DB_URL"), System.getenv("USER"), System.getenv("PW"));
 			Statement stmt = connection.createStatement();
 			
 			String getPassword = "SELECT id, password FROM users WHERE username = " + "'" + name + "'";
@@ -92,7 +93,8 @@ public class AuthController {
 		String hash = BCrypt.hashpw(password, BCrypt.gensalt());
 		Connection connection;
 		try {
-			connection = DriverManager.getConnection(dotenv.get("DB_URL"), dotenv.get("USER"), dotenv.get("PW"));
+			connection =  DriverManager.getConnection(System.getenv("DB_URL"), System.getenv("USER"), System.getenv("PW"));
+			//connection = DriverManager.getConnection(dotenv.get("DB_URL"), dotenv.get("USER"), dotenv.get("PW"));
 			Statement stmt = connection.createStatement();
 			stmt.execute("CREATE TABLE IF NOT EXISTS users ( " 
 					   + "id varchar(20)," 
@@ -134,7 +136,7 @@ public class AuthController {
 	@Path("/db")
 	@Produces(MediaType.TEXT_HTML)
 	  public String db() {
-	    try (Connection connection = DriverManager.getConnection(dotenv.get("DB_URL"), dotenv.get("USER"), dotenv.get("PW"))) {
+	    try (Connection connection = DriverManager.getConnection(System.getenv("DB_URL"), System.getenv("USER"), System.getenv("PW"))) {
 	      Statement stmt = connection.createStatement();
 	      stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)");
 	      stmt.executeUpdate("INSERT INTO ticks VALUES (now())");
