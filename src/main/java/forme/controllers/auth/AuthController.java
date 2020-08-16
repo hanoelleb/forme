@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Base64;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -18,11 +19,20 @@ import javax.ws.rs.core.MediaType;
 
 import org.mindrot.jbcrypt.BCrypt;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import java.security.Key;
+
 import forme.config.DBConnection;
 import forme.models.User;
 
 @Path("auth")
 public class AuthController {
+	
+	//TODO: replace secret str with .env var
+	private static String secretStr = "kI5dhi7tS/aXsu3NWSSI5K6GSaxfkznn5TJwYWDVE4k=";
+	byte[] secret = Base64.getDecoder().decode(secretStr);
 	
 	static int count = 0;
 	SecureRandom random = new SecureRandom();
@@ -42,12 +52,16 @@ public class AuthController {
 			
 			rs.next();
 			String hashed = rs.getString("password");
+			final String id = rs.getString("id");
 			boolean matches = BCrypt.checkpw(password, hashed);
-
 			
 			if (matches) {
-				//return id
-				return String.format("{\"id\": \"%s\" }", rs.getString("id"));
+				String jws = Jwts.builder()
+						.setSubject(name)
+						.signWith(Keys.hmacShaKeyFor(secret))
+						.claim("id", id)
+						.compact();
+				return "{ \"token\": \"" + jws + "\", \"id\": \"" + id + "\" }";
 			} else {
 				//error
 				return null;
@@ -94,10 +108,14 @@ public class AuthController {
 
 			stmt.executeUpdate(insert);
 			
-			return "registered";
+			Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+			String jws = Jwts.builder()
+					.setSubject(name)
+					.signWith(key)
+					.claim("id", user.getId())
+					.compact();
+			return "{ \"token\": \"" + jws + "\", \"id\": \"" + user.getId() + "\" }";
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			System.out.println(e.getMessage());
 			e.printStackTrace();
 			return e.getMessage();
 		}	

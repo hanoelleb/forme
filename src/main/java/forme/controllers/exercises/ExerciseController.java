@@ -1,15 +1,18 @@
 package forme.controllers.exercises;
 
+import java.security.Key;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Base64;
 import java.util.Date;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -18,11 +21,36 @@ import javax.ws.rs.core.MediaType;
 
 import forme.config.DBConnection;
 import forme.models.Workout;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
 @Path("")
 public class ExerciseController {
 	
 	static int counter = 0;
+	
+	private static String secretStr = "kI5dhi7tS/aXsu3NWSSI5K6GSaxfkznn5TJwYWDVE4k=";
+	byte[] secret = Base64.getDecoder().decode(secretStr);
+	
+	private boolean authenticate(String jws) {
+		Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+		
+		try {
+			Jwts.parserBuilder()
+				      .setSigningKey(Keys.hmacShaKeyFor(secret))
+				      .build()
+				      .parseClaimsJws(jws);
+			return true;
+
+		} catch (JwtException e) {
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
 
 	@GET
 	@Produces(MediaType.TEXT_HTML)
@@ -48,8 +76,13 @@ public class ExerciseController {
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public String getUserExercise(@PathParam("id") String id) {	
+	public String getUserExercise(@HeaderParam("token") String jws, @PathParam("id") String id) {	
 		Connection connection;
+		
+		boolean isValid = authenticate(jws);
+		if (!isValid)
+			return("token invalid");
+		
 		try {
 			connection = DriverManager.getConnection(DBConnection.getDB_URL(), DBConnection.getUser(), DBConnection.getPW());	
 			Statement stmt = connection.createStatement();
@@ -95,7 +128,7 @@ public class ExerciseController {
 	@POST
 	@Path("{id}/create")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public String createUserExercise(@PathParam("id") String id, @FormParam("length") float length, @FormParam("description") String description) {
+	public String createUserExercise(@HeaderParam("token") String jws, @PathParam("id") String id, @FormParam("length") float length, @FormParam("description") String description) {
 		System.out.println(id + " " + length + " " + description);
 		Date date = new Date();
 		Connection connection;
