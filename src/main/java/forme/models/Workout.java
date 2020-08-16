@@ -8,6 +8,13 @@ public class Workout {
 	Date date;
 	String description;
 	
+	public Workout(String id, float length, Date date, String description) {
+		this.id = id;
+		this.length = length;
+		this.date = date;
+		this.description = description;
+	}
+	
 	public String getId() {
 		return id;
 	}

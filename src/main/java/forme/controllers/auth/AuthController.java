@@ -30,13 +30,14 @@ public class AuthController {
 	@POST
 	@Path("/login")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@Produces(MediaType.APPLICATION_JSON)
 	public String loginUser(@FormParam("name") String name, @FormParam("password") String password ) {
 		Connection connection;
 		try {
 			connection = DriverManager.getConnection(DBConnection.getDB_URL(), DBConnection.getUser(), DBConnection.getPW());
 			Statement stmt = connection.createStatement();
 			
-			String getPassword = "SELECT password FROM users WHERE username = " + "'" + name + "'";
+			String getPassword = "SELECT id, password FROM users WHERE username = " + "'" + name + "'";
 			ResultSet rs = stmt.executeQuery(getPassword);
 			
 			rs.next();
@@ -45,11 +46,11 @@ public class AuthController {
 
 			
 			if (matches) {
-				//return session?
-				return "match";
+				//return id
+				return String.format("{'id': '%s' }", rs.getString("id"));
 			} else {
 				//error
-				return "logged in";
+				return null;
 			}
 			
 		} catch (SQLException e) {
@@ -91,13 +92,13 @@ public class AuthController {
 			
 			String insert = "INSERT INTO users (id, username, email, password) VALUES ( "
 					+ String.format(" '%s', '%s', '%s', '%s' );", user.getId(), user.getName(), user.getEmail(), user.getPassword());
-			System.out.println(insert);
-			
+
 			stmt.executeUpdate(insert);
 			
 			return "registered";
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
+			System.out.println(e.getMessage());
 			e.printStackTrace();
 			return e.getMessage();
 		}	
