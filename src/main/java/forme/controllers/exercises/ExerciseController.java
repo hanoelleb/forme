@@ -17,6 +17,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import forme.models.Workout;
 //import io.github.cdimascio.dotenv.Dotenv;
@@ -27,12 +28,9 @@ import io.jsonwebtoken.security.Keys;
 @Path("")
 public class ExerciseController {
 	
-	//Dotenv dotenv = Dotenv.load();
-	//Dotenv dotenv = Dotenv.configure().directory("").load();
-	
 	static int counter = 0;
 	
-	private static String secretStr = "kI5dhi7tS/aXsu3NWSSI5K6GSaxfkznn5TJwYWDVE4k=";
+	private static String secretStr = System.getenv("SECRET");
 	byte[] secret = Base64.getDecoder().decode(secretStr);
 	
 	private boolean authenticate(String jws) {
@@ -44,7 +42,6 @@ public class ExerciseController {
 			return true;
 
 		} catch (JwtException e) {
-			System.out.println(e.getMessage());
 			return false;
 		}
 	}
@@ -61,27 +58,18 @@ public class ExerciseController {
 	public Workout getAllUserExercises() {
 		return null;
 	}
-	/*
-	@GET
-	@Path("/{id}")
-	@Produces(MediaType.TEXT_HTML)
-	public String getUserExerciseHTML(@PathParam("id") Integer id) {
-		return "<html> " + "<title>" + "Exercise: " + id + "</title>" + "<body><h1>" + "Exerciser: " + id + "</body></h1>"
-				+ "</html> ";
-	}
-*/
+
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public String getUserExercise(@HeaderParam("token") String jws, @PathParam("id") String id) {	
+	public Response getUserExercise(@HeaderParam("token") String jws, @PathParam("id") String id) {	
 		Connection connection;
 		
 		boolean isValid = authenticate(jws);
 		if (!isValid)
-			return("token invalid");
+			return Response.status(Response.Status.UNAUTHORIZED).build();
 		
 		try {
-			//connection = DriverManager.getConnection(dotenv.get("DB_URL"), dotenv.get("USER"), dotenv.get("PW"));	
 			connection =  DriverManager.getConnection(System.getenv("DB_URL"), System.getenv("USER"), System.getenv("PW"));
 			Statement stmt = connection.createStatement();
 			
@@ -109,9 +97,15 @@ public class ExerciseController {
 			}
 			result += " ] }";
 			
-			return result;
+			return Response
+					.ok()
+					.entity(result)
+					.type(MediaType.APPLICATION_JSON)
+					.header("Access-Control-Allow-Origin", "*")
+					.header("Access-Control-Allow-Methods", "GET")
+					.build();
 		} catch (SQLException e) {
-			return e.getMessage();
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}
 	}
 	
@@ -126,18 +120,17 @@ public class ExerciseController {
 	@POST
 	@Path("{id}/create")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public String createUserExercise(@HeaderParam("token") String jws, 
+	public Response createUserExercise(@HeaderParam("token") String jws, 
 			@PathParam("id") String id,
 			@FormParam("length") float length, @FormParam("description") String description) {
 		
 		boolean isValid = authenticate(jws);
 		if (!isValid)
-			return("token invalid");
+			return Response.status(Response.Status.UNAUTHORIZED).build();
 		
 		Date date = new Date();
 		Connection connection;
 		try {
-			//connection =  DriverManager.getConnection(dotenv.get("DB_URL"), dotenv.get("USER"), dotenv.get("PW"));
 			connection =  DriverManager.getConnection(System.getenv("DB_URL"), System.getenv("USER"), System.getenv("PW"));
 			Statement stmt = connection.createStatement();
 			
@@ -167,9 +160,12 @@ public class ExerciseController {
 								+ String.format(" '%s','%s')" , id, workout.getId());
 			stmt.executeUpdate(query2);
 			
-			return "";
+			return Response.ok()
+					.header("Access-Control-Allow-Origin", "*")
+					.header("Access-Control-Allow-Methods", "POST")
+					.build();
 		} catch (SQLException e) {
-			return e.getMessage();
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}
 	}
 }

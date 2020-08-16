@@ -16,23 +16,18 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.mindrot.jbcrypt.BCrypt;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-
-//import io.github.cdimascio.dotenv.Dotenv;
-
 import forme.models.User;
 
 @Path("auth")
 public class AuthController {
 	
-	//Dotenv dotenv = Dotenv.configure().directory("").load();
-	
-	//TODO: replace secret str with .env var
-	private static String secretStr = "kI5dhi7tS/aXsu3NWSSI5K6GSaxfkznn5TJwYWDVE4k=";
+	private static String secretStr = System.getenv("SECRET");
 	byte[] secret = Base64.getDecoder().decode(secretStr);
 	
 	static int count = 0;
@@ -42,10 +37,9 @@ public class AuthController {
 	@Path("/login")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces(MediaType.APPLICATION_JSON)
-	public String loginUser(@FormParam("name") String name, @FormParam("password") String password ) {
+	public Response loginUser(@FormParam("name") String name, @FormParam("password") String password ) {
 		Connection connection;
 		try {
-			//connection = DriverManager.getConnection(dotenv.get("DB_URL"), dotenv.get("USER"), dotenv.get("PW"));
 			connection =  DriverManager.getConnection(System.getenv("DB_URL"), System.getenv("USER"), System.getenv("PW"));
 			Statement stmt = connection.createStatement();
 			
@@ -63,15 +57,23 @@ public class AuthController {
 						.signWith(Keys.hmacShaKeyFor(secret))
 						.claim("id", id)
 						.compact();
-				return "{ \"token\": \"" + jws + "\", \"id\": \"" + id + "\" }";
+				
+				String toSend = "{ \"token\": \"" + jws + "\", \"id\": \"" + id + "\" }";
+				
+				return Response
+						.ok()
+						.entity(toSend)
+						.type(MediaType.APPLICATION_JSON)
+						.header("Access-Control-Allow-Origin", "*")
+						.header("Access-Control-Allow-Methods", "POST")
+						.build();
 			} else {
-				//error
-				return null;
+				return Response.status(Response.Status.UNAUTHORIZED).build();
 			}
 			
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return e.getMessage();
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}	
 	}
 	
@@ -86,7 +88,7 @@ public class AuthController {
 	@POST
 	@Path("/register")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public String registerUser(@FormParam("name") String name, 
+	public Response registerUser(@FormParam("name") String name, 
 			@FormParam("email") String email, 
 			@FormParam("password") String password) {
 		
@@ -94,7 +96,6 @@ public class AuthController {
 		Connection connection;
 		try {
 			connection =  DriverManager.getConnection(System.getenv("DB_URL"), System.getenv("USER"), System.getenv("PW"));
-			//connection = DriverManager.getConnection(dotenv.get("DB_URL"), dotenv.get("USER"), dotenv.get("PW"));
 			Statement stmt = connection.createStatement();
 			stmt.execute("CREATE TABLE IF NOT EXISTS users ( " 
 					   + "id varchar(20)," 
@@ -116,10 +117,17 @@ public class AuthController {
 					.signWith(Keys.hmacShaKeyFor(secret))
 					.claim("id", user.getId())
 					.compact();
-			return "{ \"token\": \"" + jws + "\", \"id\": \"" + user.getId() + "\" }";
+			String toSend = "{ \"token\": \"" + jws + "\", \"id\": \"" + user.getId() + "\" }";
+			return Response
+					.ok()
+					.entity(toSend)
+					.type(MediaType.APPLICATION_JSON)
+					.header("Access-Control-Allow-Origin", "*")
+					.header("Access-Control-Allow-Methods", "POST")
+					.build();
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return e.getMessage();
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}	
 	}
 	
