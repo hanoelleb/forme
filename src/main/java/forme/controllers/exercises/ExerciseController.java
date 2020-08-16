@@ -21,11 +21,8 @@ import javax.ws.rs.core.MediaType;
 
 import forme.config.DBConnection;
 import forme.models.Workout;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
 @Path("")
@@ -37,8 +34,6 @@ public class ExerciseController {
 	byte[] secret = Base64.getDecoder().decode(secretStr);
 	
 	private boolean authenticate(String jws) {
-		Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-		
 		try {
 			Jwts.parserBuilder()
 				      .setSigningKey(Keys.hmacShaKeyFor(secret))
@@ -128,8 +123,14 @@ public class ExerciseController {
 	@POST
 	@Path("{id}/create")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public String createUserExercise(@HeaderParam("token") String jws, @PathParam("id") String id, @FormParam("length") float length, @FormParam("description") String description) {
-		System.out.println(id + " " + length + " " + description);
+	public String createUserExercise(@HeaderParam("token") String jws, 
+			@PathParam("id") String id,
+			@FormParam("length") float length, @FormParam("description") String description) {
+		
+		boolean isValid = authenticate(jws);
+		if (!isValid)
+			return("token invalid");
+		
 		Date date = new Date();
 		Connection connection;
 		try {

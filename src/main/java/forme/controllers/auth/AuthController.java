@@ -107,11 +107,10 @@ public class AuthController {
 					+ String.format(" '%s', '%s', '%s', '%s' );", user.getId(), user.getName(), user.getEmail(), user.getPassword());
 
 			stmt.executeUpdate(insert);
-			
-			Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+
 			String jws = Jwts.builder()
 					.setSubject(name)
-					.signWith(key)
+					.signWith(Keys.hmacShaKeyFor(secret))
 					.claim("id", user.getId())
 					.compact();
 			return "{ \"token\": \"" + jws + "\", \"id\": \"" + user.getId() + "\" }";
