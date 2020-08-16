@@ -1,5 +1,6 @@
 package forme.controllers.auth;
 
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -15,15 +16,47 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import forme.config.DBConnection;
 import forme.models.User;
 
 @Path("auth")
 public class AuthController {
+	
+	static int count = 0;
+	SecureRandom random = new SecureRandom();
+	
 	@POST
 	@Path("/login")
-	public void loginUser() {
-		
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	public String loginUser(@FormParam("name") String name, @FormParam("password") String password ) {
+		Connection connection;
+		try {
+			connection = DriverManager.getConnection(DBConnection.getDB_URL(), DBConnection.getUser(), DBConnection.getPW());
+			Statement stmt = connection.createStatement();
+			
+			String getPassword = "SELECT password FROM users WHERE username = " + "'" + name + "'";
+			ResultSet rs = stmt.executeQuery(getPassword);
+			
+			rs.next();
+			String hashed = rs.getString("password");
+			boolean matches = BCrypt.checkpw(password, hashed);
+
+			
+			if (matches) {
+				//return session?
+				return "match";
+			} else {
+				//error
+				return "logged in";
+			}
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return e.getMessage();
+		}	
 	}
 	
 	@GET
@@ -41,9 +74,7 @@ public class AuthController {
 			@FormParam("email") String email, 
 			@FormParam("password") String password) {
 		
-		System.out.println(name);
-		System.out.println(email);
-		
+		String hash = BCrypt.hashpw(password, BCrypt.gensalt());
 		Connection connection;
 		try {
 			connection = DriverManager.getConnection(DBConnection.getDB_URL(), DBConnection.getUser(), DBConnection.getPW());
@@ -56,10 +87,10 @@ public class AuthController {
 					   + "PRIMARY KEY (id) );");
 			
 			
-			User user = new User("testtesttest", name, email, password.toCharArray());
+			User user = new User("test4", name, email, hash);
 			
 			String insert = "INSERT INTO users (id, username, email, password) VALUES ( "
-					+ String.format(" '%s', '%s', '%s', '%s' );", user.getId(), user.getName(), user.getEmail(), user.getPassword().toString());
+					+ String.format(" '%s', '%s', '%s', '%s' );", user.getId(), user.getName(), user.getEmail(), user.getPassword());
 			System.out.println(insert);
 			
 			stmt.executeUpdate(insert);
