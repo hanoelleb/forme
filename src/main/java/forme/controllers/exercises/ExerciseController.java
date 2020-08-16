@@ -49,15 +49,10 @@ public class ExerciseController {
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public String getUserExercise(@PathParam("id") String id) {	
-		
-		System.out.println("flag0");
-		
 		Connection connection;
 		try {
 			connection = DriverManager.getConnection(DBConnection.getDB_URL(), DBConnection.getUser(), DBConnection.getPW());	
 			Statement stmt = connection.createStatement();
-			
-			System.out.println("flag1");
 			
 			String log = "SELECT * FROM workouts w "
 					+ "WHERE w.id IN "
@@ -65,22 +60,19 @@ public class ExerciseController {
 					+ "SELECT workout_id FROM user_logs WHERE user_id = '" + id + "'" 
 					+ ")";
 			
-			
-			//String test = "SELECT * FROM user_logs WHERE user_id = '" + id + "')";
-			
-			
-			String result = "{ logs: [ ";
+			String result = "{ \"logs\": [ ";
 			ResultSet rs = stmt.executeQuery(log);
 			
 			while (rs.next()) {
 				
-				//result += "user: " +  rs.getString("user_id");
-				//result += " workout: " + rs.getString("workout_id");
+				String exercise = "{ \"date\": \"" + rs.getDate("log_date") + "\"" 
+					+ ", \"length\": " + rs.getFloat("length") 
+					+ ", \"description\": " + "\"" + rs.getString("description") + "\"";
 				
-				String exercise = "{ date: " + rs.getDate("log_date") 
-					+ ", length: " + rs.getFloat("length") 
-					+ ", description: " + rs.getString("description") 
-					+ "}, ";
+				if (rs.isLast())
+					exercise += "} ";
+				else
+					exercise += "}, ";
 				
 				result += exercise;
 			}

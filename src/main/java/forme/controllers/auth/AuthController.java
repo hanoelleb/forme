@@ -47,14 +47,13 @@ public class AuthController {
 			
 			if (matches) {
 				//return id
-				return String.format("{'id': '%s' }", rs.getString("id"));
+				return String.format("{\"id\": \"%s\" }", rs.getString("id"));
 			} else {
 				//error
 				return null;
 			}
 			
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return e.getMessage();
 		}	
