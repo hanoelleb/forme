@@ -11,16 +11,15 @@ import java.util.Date;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import forme.models.Workout;
-//import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -29,8 +28,6 @@ import io.jsonwebtoken.security.Keys;
 public class ExerciseController {
 	
 	static int counter = 0;
-	
-	private final String tokenErr = "\"message\": \"tokenError\"";
 	
 	private static String secretStr = System.getenv("SECRET");
 	byte[] secret = Base64.getDecoder().decode(secretStr);
@@ -64,18 +61,12 @@ public class ExerciseController {
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getUserExercise(@HeaderParam("token") String jws, @PathParam("id") String id) {	
+	public Response getUserExercise(@QueryParam("token") String jws, @PathParam("id") String id) {	
 		Connection connection;
 		
 		boolean isValid = authenticate(jws);
 		if (!isValid)
-			return Response.status(Response.Status.UNAUTHORIZED)
-					.entity(tokenErr)
-					.type(MediaType.APPLICATION_JSON)
-					.header("Access-Control-Allow-Origin", "*")
-					.header("Access-Control-Allow-Headers", "token")
-					.header("Access-Control-Allow-Methods", "GET")
-					.build();
+			return Response.status(Response.Status.UNAUTHORIZED).build();
 		
 		try {
 			connection =  DriverManager.getConnection(System.getenv("DB_URL"), System.getenv("USER"), System.getenv("PW"));
@@ -110,17 +101,10 @@ public class ExerciseController {
 					.entity(result)
 					.type(MediaType.APPLICATION_JSON)
 					.header("Access-Control-Allow-Origin", "*")
-					.header("Access-Control-Allow-Headers", "token")
 					.header("Access-Control-Allow-Methods", "GET")
 					.build();
 		} catch (SQLException e) {
-			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-					.entity("{ \"message\": \"" + e.getMessage() +"\"")
-					.type(MediaType.APPLICATION_JSON)
-					.header("Access-Control-Allow-Origin", "*")
-					.header("Access-Control-Allow-Headers", "token")
-					.header("Access-Control-Allow-Methods", "GET")
-					.build();
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}
 	}
 	
@@ -135,19 +119,13 @@ public class ExerciseController {
 	@POST
 	@Path("{id}/create")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response createUserExercise(@HeaderParam("token") String jws, 
+	public Response createUserExercise(@QueryParam("token") String jws, 
 			@PathParam("id") String id,
 			@FormParam("length") float length, @FormParam("description") String description) {
 		
 		boolean isValid = authenticate(jws);
 		if (!isValid)
-			return Response.status(Response.Status.UNAUTHORIZED)
-					.entity(tokenErr)
-					.type(MediaType.APPLICATION_JSON)
-					.header("Access-Control-Allow-Origin", "*")
-					.header("Access-Control-Allow-Headers", "token")
-					.header("Access-Control-Allow-Methods", "GET")
-					.build();
+			return Response.status(Response.Status.UNAUTHORIZED).build();
 		
 		Date date = new Date();
 		Connection connection;
@@ -183,17 +161,10 @@ public class ExerciseController {
 			
 			return Response.ok()
 					.header("Access-Control-Allow-Origin", "*")
-					.header("Access-Control-Allow-Headers", "token")
 					.header("Access-Control-Allow-Methods", "POST")
 					.build();
 		} catch (SQLException e) {
-			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-					.entity("{ \"message\": \"" + e.getMessage() +"\"")
-					.type(MediaType.APPLICATION_JSON)
-					.header("Access-Control-Allow-Origin", "*")
-					.header("Access-Control-Allow-Headers", "token")
-					.header("Access-Control-Allow-Methods", "GET")
-					.build();
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}
 	}
 }
