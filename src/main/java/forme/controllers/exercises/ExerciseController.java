@@ -102,6 +102,7 @@ public class ExerciseController {
 					.entity(result)
 					.type(MediaType.APPLICATION_JSON)
 					.header("Access-Control-Allow-Origin", "*")
+					.header("Access-Control-Allow-Headers", "token")
 					.header("Access-Control-Allow-Methods", "GET")
 					.build();
 		} catch (SQLException e) {
@@ -162,6 +163,7 @@ public class ExerciseController {
 			
 			return Response.ok()
 					.header("Access-Control-Allow-Origin", "*")
+					.header("Access-Control-Allow-Headers", "token")
 					.header("Access-Control-Allow-Methods", "POST")
 					.build();
 		} catch (SQLException e) {
