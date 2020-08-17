@@ -30,6 +30,8 @@ public class ExerciseController {
 	
 	static int counter = 0;
 	
+	private final String tokenErr = "\"message\": \"tokenError\"";
+	
 	private static String secretStr = System.getenv("SECRET");
 	byte[] secret = Base64.getDecoder().decode(secretStr);
 	
@@ -67,7 +69,13 @@ public class ExerciseController {
 		
 		boolean isValid = authenticate(jws);
 		if (!isValid)
-			return Response.status(Response.Status.UNAUTHORIZED).build();
+			return Response.status(Response.Status.UNAUTHORIZED)
+					.entity(tokenErr)
+					.type(MediaType.APPLICATION_JSON)
+					.header("Access-Control-Allow-Origin", "*")
+					.header("Access-Control-Allow-Headers", "token")
+					.header("Access-Control-Allow-Methods", "GET")
+					.build();
 		
 		try {
 			connection =  DriverManager.getConnection(System.getenv("DB_URL"), System.getenv("USER"), System.getenv("PW"));
@@ -106,7 +114,13 @@ public class ExerciseController {
 					.header("Access-Control-Allow-Methods", "GET")
 					.build();
 		} catch (SQLException e) {
-			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+					.entity("{ \"message\": \"" + e.getMessage() +"\"")
+					.type(MediaType.APPLICATION_JSON)
+					.header("Access-Control-Allow-Origin", "*")
+					.header("Access-Control-Allow-Headers", "token")
+					.header("Access-Control-Allow-Methods", "GET")
+					.build();
 		}
 	}
 	
@@ -127,7 +141,13 @@ public class ExerciseController {
 		
 		boolean isValid = authenticate(jws);
 		if (!isValid)
-			return Response.status(Response.Status.UNAUTHORIZED).build();
+			return Response.status(Response.Status.UNAUTHORIZED)
+					.entity(tokenErr)
+					.type(MediaType.APPLICATION_JSON)
+					.header("Access-Control-Allow-Origin", "*")
+					.header("Access-Control-Allow-Headers", "token")
+					.header("Access-Control-Allow-Methods", "GET")
+					.build();
 		
 		Date date = new Date();
 		Connection connection;
@@ -167,7 +187,13 @@ public class ExerciseController {
 					.header("Access-Control-Allow-Methods", "POST")
 					.build();
 		} catch (SQLException e) {
-			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+					.entity("{ \"message\": \"" + e.getMessage() +"\"")
+					.type(MediaType.APPLICATION_JSON)
+					.header("Access-Control-Allow-Origin", "*")
+					.header("Access-Control-Allow-Headers", "token")
+					.header("Access-Control-Allow-Methods", "GET")
+					.build();
 		}
 	}
 }
