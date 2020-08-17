@@ -105,7 +105,7 @@ public class AuthController {
 					   + "PRIMARY KEY (id) );");
 			
 			
-			User user = new User("test4", name, email, hash);
+			User user = new User("fu1324" + (count++), name, email, hash);
 			
 			String insert = "INSERT INTO users (id, username, email, password) VALUES ( "
 					+ String.format(" '%s', '%s', '%s', '%s' );", user.getId(), user.getName(), user.getEmail(), user.getPassword());
